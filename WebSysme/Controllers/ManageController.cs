@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using ASPNET_Core_1_0.Models;
-using ASPNET_Core_1_0.Models.ManageViewModels;
-using ASPNET_Core_1_0.Services;
+using WebSysme.Models;
+using WebSysme.Models.ManageViewModels;
+using WebSysme.Services;
 
-namespace ASPNET_Core_1_0.Controllers
+namespace WebSysme.Controllers
 {
     [Authorize]
     public class ManageController : Controller
@@ -110,7 +110,7 @@ namespace ASPNET_Core_1_0.Controllers
             }
             var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, model.PhoneNumber);
             await _smsSender.SendSmsAsync(model.PhoneNumber, "Your security code is: " + code);
-            return RedirectToAction(nameof(VerifyPhoneNumber), new { PhoneNumber = model.PhoneNumber });
+            return RedirectToAction(nameof(VerifyPhoneNumber), new {  model.PhoneNumber });
         }
 
         //
@@ -287,7 +287,7 @@ namespace ASPNET_Core_1_0.Controllers
                 return View("Error");
             }
             var userLogins = await _userManager.GetLoginsAsync(user);
-            var otherLogins = _signInManager.GetExternalAuthenticationSchemes().Where(auth => userLogins.All(ul => auth.AuthenticationScheme != ul.LoginProvider)).ToList();
+            var otherLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).Where(auth => userLogins.All(ul => auth.DisplayName != ul.ProviderDisplayName)).ToList();
             ViewData["ShowRemoveButton"] = user.PasswordHash != null || userLogins.Count > 1;
             return View(new ManageLoginsViewModel
             {
